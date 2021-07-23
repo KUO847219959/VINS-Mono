@@ -129,10 +129,13 @@ CameraFactory::generateCameraFromYamlFile(const std::string& filename)
     {
     case Camera::KANNALA_BRANDT:
     {
+        // 生成相机模型的指针 camera
         EquidistantCameraPtr camera(new EquidistantCamera);
 
         EquidistantCamera::Parameters params = camera->getParameters();
+        // 引用的方式 ，直接更改params的值
         params.readFromYamlFile(filename);
+        // 设置 相机参数
         camera->setParameters(params);
         return camera;
     }

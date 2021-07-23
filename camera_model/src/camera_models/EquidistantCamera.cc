@@ -625,6 +625,7 @@ EquidistantCamera::setParameters(const EquidistantCamera::Parameters& parameters
     mParameters = parameters;
 
     // Inverse camera projection matrix parameters
+    // 为计算去畸变时候方便调用，避免重复计算
     m_inv_K11 = 1.0 / mParameters.mu();
     m_inv_K13 = -mParameters.u0() / mParameters.mu();
     m_inv_K22 = 1.0 / mParameters.mv();

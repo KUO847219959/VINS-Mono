@@ -37,13 +37,18 @@ T readParam(ros::NodeHandle &n, std::string name)
 void readParameters(ros::NodeHandle &n)
 {
     std::string config_file;
-    config_file = readParam<std::string>(n, "config_file");
+    // TODO
+    // config_file = readParam<std::string>(n, "config_file");
+    config_file = "/home/lab-307/slam_ws/src/VINS-Mono/config/euroc/euroc_config.yaml";
     cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
     if(!fsSettings.isOpened())
     {
         std::cerr << "ERROR: Wrong path to settings" << std::endl;
     }
-    std::string VINS_FOLDER_PATH = readParam<std::string>(n, "vins_folder");
+
+    // TODO
+    // std::string VINS_FOLDER_PATH = readParam<std::string>(n, "vins_folder");
+    std::string VINS_FOLDER_PATH = "/home/lab-307/slam_ws/src/VINS-Mono";
 
     fsSettings["image_topic"] >> IMAGE_TOPIC;
     fsSettings["imu_topic"] >> IMU_TOPIC;
@@ -65,10 +70,10 @@ void readParameters(ros::NodeHandle &n)
     FOCAL_LENGTH = 460;
     PUB_THIS_FRAME = false;
 
+    // 默认送入后端的图像贞频率为 10贞
     if (FREQ == 0)
         FREQ = 100;
 
     fsSettings.release();
-
 
 }

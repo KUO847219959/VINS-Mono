@@ -167,12 +167,13 @@ PinholeCamera::Parameters::readFromYamlFile(const std::string& filename)
     m_imageWidth = static_cast<int>(fs["image_width"]);
     m_imageHeight = static_cast<int>(fs["image_height"]);
 
+    // 获得相机的畸变参数
     cv::FileNode n = fs["distortion_parameters"];
     m_k1 = static_cast<double>(n["k1"]);
     m_k2 = static_cast<double>(n["k2"]);
     m_p1 = static_cast<double>(n["p1"]);
     m_p2 = static_cast<double>(n["p2"]);
-
+    // 相机的内参矩阵
     n = fs["projection_parameters"];
     m_fx = static_cast<double>(n["fx"]);
     m_fy = static_cast<double>(n["fy"]);
@@ -454,6 +455,9 @@ PinholeCamera::liftProjective(const Eigen::Vector2d& p, Eigen::Vector3d& P) cons
     //double lambda;
 
     // Lift points to normalised plane
+    // 将像素坐标系下的点转换成归一化坐标系下的点
+    // u = fx * X + Cx
+    // v = fy * Y + Cy
     mx_d = m_inv_K11 * p(0) + m_inv_K13;
     my_d = m_inv_K22 * p(1) + m_inv_K23;
 
@@ -488,8 +492,10 @@ PinholeCamera::liftProjective(const Eigen::Vector2d& p, Eigen::Vector3d& P) cons
         }
         else
         {
+            // 参考https://github.com/HKUST-Aerial-Robotics/VINS-Mono/issues/48
             // Recursive distortion model
-            int n = 8;
+            // 递归求解畸变模型
+            int n = 8;   // 递归次数
             Eigen::Vector2d d_u;
             distortion(Eigen::Vector2d(mx_d, my_d), d_u);
             // Approximate value
@@ -498,7 +504,9 @@ PinholeCamera::liftProjective(const Eigen::Vector2d& p, Eigen::Vector3d& P) cons
 
             for (int i = 1; i < n; ++i)
             {
+                // 更新 d_u ，迭代过程中会逐渐增大，越来越逼近真实的畸变差
                 distortion(Eigen::Vector2d(mx_u, my_u), d_u);
+                // 最初未去畸变的归一化平面的像素坐标 - d_u 逐步逼近 去畸变过后的像素坐标
                 mx_u = mx_d - d_u(0);
                 my_u = my_d - d_u(1);
             }
@@ -506,6 +514,7 @@ PinholeCamera::liftProjective(const Eigen::Vector2d& p, Eigen::Vector3d& P) cons
     }
 
     // Obtain a projective ray
+    // 返回归一化坐标系下的点
     P << mx_u, my_u, 1.0;
 }
 
@@ -657,6 +666,7 @@ PinholeCamera::distortion(const Eigen::Vector2d& p_u, Eigen::Vector2d& d_u) cons
     mxy_u = p_u(0) * p_u(1);
     rho2_u = mx2_u + my2_u;
     rad_dist_u = k1 * rho2_u + k2 * rho2_u * rho2_u;
+    // 第一项是径向畸变，第二项是切向畸变
     d_u << p_u(0) * rad_dist_u + 2.0 * p1 * mxy_u + p2 * (rho2_u + 2.0 * mx2_u),
            p_u(1) * rad_dist_u + 2.0 * p2 * mxy_u + p1 * (rho2_u + 2.0 * my2_u);
 }

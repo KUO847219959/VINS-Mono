@@ -42,7 +42,8 @@ T readParam(ros::NodeHandle &n, std::string name)
 void readParameters(ros::NodeHandle &n)
 {
     std::string config_file;
-    config_file = readParam<std::string>(n, "config_file");
+    //config_file = readParam<std::string>(n, "config_file");
+    config_file = "/home/lab-307/slam_ws/src/vins-mono-note-chinese/VINS-Mono/config/euroc/euroc_config.yaml";
     cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
     if(!fsSettings.isOpened())
     {
@@ -51,10 +52,10 @@ void readParameters(ros::NodeHandle &n)
 
     fsSettings["imu_topic"] >> IMU_TOPIC;
 
-    SOLVER_TIME = fsSettings["max_solver_time"];
-    NUM_ITERATIONS = fsSettings["max_num_iterations"];
-    MIN_PARALLAX = fsSettings["keyframe_parallax"];
-    MIN_PARALLAX = MIN_PARALLAX / FOCAL_LENGTH;
+    SOLVER_TIME = fsSettings["max_solver_time"];    // 单次优化最大求解时间
+    NUM_ITERATIONS = fsSettings["max_num_iterations"];  // 单词优化最大迭代次数
+    MIN_PARALLAX = fsSettings["keyframe_parallax"]; // 根据视差确定关键帧
+    MIN_PARALLAX = MIN_PARALLAX / FOCAL_LENGTH;    // 转换到虚拟相机 虚拟焦距
 
     std::string OUTPUT_PATH;
     fsSettings["output_path"] >> OUTPUT_PATH;
@@ -67,6 +68,7 @@ void readParameters(ros::NodeHandle &n)
     std::ofstream fout(VINS_RESULT_PATH, std::ios::out);
     fout.close();
 
+    // imu、图像相关参数
     ACC_N = fsSettings["acc_n"];
     ACC_W = fsSettings["acc_w"];
     GYR_N = fsSettings["gyr_n"];
@@ -85,7 +87,7 @@ void readParameters(ros::NodeHandle &n)
         EX_CALIB_RESULT_PATH = OUTPUT_PATH + "/extrinsic_parameter.csv";
 
     }
-    else 
+    else
     {
         if ( ESTIMATE_EXTRINSIC == 1)
         {
@@ -108,13 +110,14 @@ void readParameters(ros::NodeHandle &n)
         TIC.push_back(eigen_T);
         ROS_INFO_STREAM("Extrinsic_R : " << std::endl << RIC[0]);
         ROS_INFO_STREAM("Extrinsic_T : " << std::endl << TIC[0].transpose());
-        
-    } 
+
+    }
 
     INIT_DEPTH = 5.0;
     BIAS_ACC_THRESHOLD = 0.1;
     BIAS_GYR_THRESHOLD = 0.1;
 
+    // 传感器时间延时相关
     TD = fsSettings["td"];
     ESTIMATE_TD = fsSettings["estimate_td"];
     if (ESTIMATE_TD)
@@ -132,6 +135,6 @@ void readParameters(ros::NodeHandle &n)
     {
         TR = 0;
     }
-    
+
     fsSettings.release();
 }
